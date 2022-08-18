@@ -1,0 +1,4 @@
+local times = 9999--change this value for a higher multiplier
+for i=1,times do
+workspace['Region_ExChang1'].Button.Clicked:FireServer(true)
+end

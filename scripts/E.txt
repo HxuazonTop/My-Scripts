@@ -1,0 +1,213 @@
+local start = os.clock()
+
+if not (isfolder('AssetWare')) then
+    makefolder('AssetWare')
+end
+
+if not (isfolder('AssetWare/AudioStorage')) then
+    makefolder('AssetWare/AudioStorage')
+end
+
+local UI = game:GetObjects('rbxassetid://9235216343')[1]
+UI.Parent = game:GetService'CoreGui'
+
+local LP = game.Players.LocalPlayer
+
+local RootPart = LP.Character['HumanoidRootPart']
+
+local Players = game:GetService'Players'
+
+local Tween = game:GetService'TweenService'
+
+local UIS = game:GetService'UserInputService'
+
+local cos, sin, rad, max, deg = math.cos, math.sin, math.rad, math.max, math.deg
+
+local concat = table.concat
+
+local char, format, gsub, byte = string.char, string.format, string.gsub, string.byte
+
+local lower, upper, sub, len, split = string.lower, string.upper, string.sub, string.len, string.split
+
+local format, char, byte = string.format, string.char, string.byte
+
+local Request = syn and syn.request or request
+
+local isVisualizing = false
+
+local SmartToggle = false
+
+local isDuping = false
+
+local isManualMute = false
+
+local isToolGrabbing = false
+
+local Preset1, Preset2, Preset3, Preset4, Preset5, Preset6, Preset7, Preset8, Preset9 = true, false, false, false, false, false, false, false, false
+
+local Notification, NotifyText, Title = UI['Notification'], UI['Notification']['Text'], UI['Notification']['TextLabel']
+
+local function Notify(Text, Duration)
+    NotifyText['Text'] = tostring(Text)
+    local NotificationStart = Tween:Create(
+        Notification,
+        TweenInfo.new(.2, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+        {Position = UDim2.new(0.006, 0,0.99, -26)}
+    )
+    NotificationStart:Play()
+    wait(Duration)
+    local NotificationEnd = Tween:Create(
+        Notification,
+        TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+        {BackgroundTransparency = 1}
+    )
+    NotificationEnd:Play()
+    local TextFade = Tween:Create(
+        NotifyText,
+        TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+        {TextTransparency = 1}
+    )
+    TextFade:Play()
+    local TextFade = Tween:Create(
+        NotifyText,
+        TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+        {TextTransparency = 1}
+    )
+    TextFade:Play()
+    local TitleFade = Tween:Create(
+        Title,
+        TweenInfo.new(1, Enum.EasingStyle.Quad, Enum.EasingDirection.InOut),
+        {TextTransparency = 1}
+    )
+    TitleFade:Play()
+    wait(1)
+    Notification['Position'] = UDim2.new(-1, 0,0.99, -26)
+    Notification['BackgroundTransparency'] = .5
+    NotifyText['TextTransparency'] = 0
+    Title['TextTransparency'] = 0
+end
+
+local function GetPlayer(str)
+    for _, Player in ipairs(Players:GetPlayers()) do
+        if (str:lower():match(Player['Name']:lower():sub(1, #str))) then
+            return Player
+        end
+    end
+    return nil
+end
+
+local Mainframe = UI['Frame']
+
+local function draggable(uiObj, speed, style, dir)
+    speed = tonumber(speed) or 5
+    style = not style and "Cubic" or style
+    dir = not dir and "Out" or dir
+
+    local uis, ts, nti = game:GetService("UserInputService"), game:GetService("TweenService"), TweenInfo.new
+    local selected, startPos, grabPos = false, nil, nil
+
+    uiObj.InputBegan:Connect(function(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 then
+            selected, startPos, grabPos = true, uiObj.Position, input.Position
+        end
+    end)
+
+    coroutine.wrap(function()
+        local CC = nil; CC = uis.InputChanged:Connect(function(input)
+            if not uiObj then
+                CC:Disconnect()
+            end
+            if input.UserInputType == Enum.UserInputType.MouseMovement and selected then
+                local delta = input.Position - grabPos
+                local newPos = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)
+                ts:Create(uiObj, 
+                    nti(speed^-1, Enum.EasingStyle[style], Enum.EasingDirection[dir]),
+                    {Position = newPos}
+                ):Play()
+            end
+        end)
+        local EC = nil; EC = uis.InputEnded:Connect(function(input)
+            if not uiObj then
+                EC:Disconnect()
+            end
+            if input.UserInputType == Enum.UserInputType.MouseButton1 and selected then
+                selected = false
+            end
+        end)
+    end)()
+end
+
+draggable(Mainframe, 10, 'Cubic', 'Out')
+
+-- Audio-Encoder Section
+
+local AssetNameEncoder = {}; do
+	AssetNameEncoder.LastCustomMessage = ''
+
+	local HttpGetAsync = game.HttpGetAsync
+	local VersionIdUrl = 'http://www.roblox.com/studio/plugins/info?assetId='
+
+	local GetVersionId = function(AssetId)
+		local Response = HttpGetAsync(game, VersionIdUrl .. AssetId)
+    	return split(split(Response, 'value="')[2], '"')[1]
+	end
+
+	local RN = Random.new()
+	local NextInteger = RN.NextInteger
+
+	local RandomString; do
+		local CharSet = {}
+		for I = 48, 57 do
+			CharSet[#CharSet+1] = char(I)
+		end
+		for I = 65, 90 do
+			CharSet[#CharSet+1] = char(I)
+		end
+		for I = 97, 122 do
+			CharSet[#CharSet+1] = char(I)
+		end
+	
+		RandomString = function(Length)
+			Length = Length or 2
+			local Str = {}
+			for I = 1, Length do
+				Str[#Str+1] = CharSet[NextInteger(RN, 1, #CharSet)]
+			end
+			return concat(Str, ' ')
+		end
+	end
+	
+	local UrlEncode = function(Input)
+		return gsub(tostring(Input), '.', function(Char)
+			return format('%%%02X', byte(Char))
+		end)
+	end
+	
+	local function ApplyUnicode(String)
+        String = String:sub(0, 0) .. '                    ' ..String:sub(1)
+        String = String:sub(0, 2) .. '                    ' ..String:sub(3)
+        String = String:sub(0, 4) .. '                    ' ..String:sub(5)
+        String = String:sub(0, 6) .. '                    ' ..String:sub(7)
+        String = String:sub(0, 8) .. '                    ' ..String:sub(9)
+        String = String:sub(0, 10) .. '                    ' ..String:sub(11)
+        String = String:sub(0, 12) .. '                    ' ..String:sub(13)
+        String = String:sub(0, 14) .. '‏                    ' ..String:sub(15)
+        String = String:sub(0, 16) .. '                    ' ..String:sub(17)
+        String = String:sub(0, 18) .. '                    ' ..String:sub(19)
+        String = String:sub(0, 20) .. '                    ' ..String:sub(21)
+        String = String:sub(0, 22) .. '                    ‮' ..String:sub(23)
+        String = String:sub(0, 24) .. '                    ' ..String:sub(25)
+        String = String:sub(0, 26) .. '                    ' ..String:sub(27)
+        String = String:sub(0, 28) .. '                    ' ..String:sub(29)
+        String = String:sub(0, 30) .. '                    ' ..String:sub(31)
+        String = String:sub(0, 32) .. '                    ' ..String:sub(33)
+        String = String:sub(0, 34) .. '                    ' ..String:sub(35)
+        String = String:sub(0, 36) .. '                    ' ..String:sub(37)
+        String = String:sub(0, 38) .. '                    ' ..String:sub(39)
+        String = String:sub(0, 40) .. '                    ' ..String:sub(41)
+        return String
+    end
+
+	local bin2hex = function(Input)
+        return '0X0X' .. format('%X', tostring(Input))
+	end
