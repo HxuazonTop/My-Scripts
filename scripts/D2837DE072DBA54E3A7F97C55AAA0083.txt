@@ -1,0 +1,256 @@
+""
+				grid[i][j].BackgroundTransparency = 1
+				--grid[i][j].Font = Enum.Font.SourceSans
+			end
+		end
+	end
+	
+	while true do
+		if currentRow > #workingEntries or currentRow > #grid[1] then break end
+		local entry = workingEntries[currentRow+yOff]
+		while string.len(entry) > 0 do
+			if string.sub(entry,1,1) == "\t" then entry = "    "..string.sub(entry,2) end
+			
+			if currentColumn > #grid then break end
+			
+			if delayance == 0 then
+				grid[currentColumn][currentRow].Text = string.sub(entry,1,1)
+			end
+			
+			-- Coloring
+			
+			if not inString then
+				for i,v in pairs(syntaxHighlightList) do
+					if string.sub(entry,1,string.len(v["Keyword"])) == v["Keyword"] then
+						if v["Independent"] then
+							local outCheck = string.len(v["Keyword"])+1
+							local outEntry = string.sub(entry,outCheck,outCheck)
+							if not string.find(outEntry,"%w") then
+								colorTime = string.len(v["Keyword"])
+								colorReplace = v["Color"]
+							end
+						else
+							colorTime = string.len(v["Keyword"])
+							colorReplace = v["Color"]
+						end
+					end
+				end
+			end
+			
+			if string.sub(entry,1,1) == "\"" and string.match(entry,"\".+\"") then
+				inString = true
+				colorTime = string.len(string.match(entry,"\".+\""))
+				colorReplace = Color3.new(170/255, 0, 1)
+			end
+			
+			if colorTime > 0 then
+				colorTime = colorTime - 1
+				grid[currentColumn][currentRow].TextColor3 = colorReplace
+				if colorTime == 0 then inString = false end
+			else
+				grid[currentColumn][currentRow].TextColor3 = Color3.new(0,0,0)
+				inString = false
+			end
+			
+			if delayance == 0 then
+				currentColumn = currentColumn + 1
+			else
+				delayance = delayance - 1
+			end
+			entry = string.sub(entry,2,string.len(entry))
+		end
+		currentRow = currentRow + 1
+		currentColumn = 2 + lineSpan
+		colorTime = 0
+		delayance = xOff
+		inString = false
+	end
+end
+
+function scrollBar.UpdateCallback(self)
+	scrollBar.TotalSpace = #entries * 16
+	scrollBar.VisibleSpace = editorGrid.AbsoluteSize.Y
+	buildScript(currentSource,math.floor(scrollBarH.ScrollIndex/8),math.floor(scrollBar.ScrollIndex/16))
+end
+
+function scrollBarH.UpdateCallback(self)
+	scrollBarH.TotalSpace = (getLongestEntry(entries) + 1 + lineSpan) * 8
+	scrollBarH.VisibleSpace = editorGrid.AbsoluteSize.X
+	buildScript(currentSource,math.floor(scrollBarH.ScrollIndex/8),math.floor(scrollBar.ScrollIndex/16))
+end
+
+function getLongestEntry(tab)
+	local longest = 0
+	for i,v in pairs(tab) do
+		if string.len(v) > longest then
+			longest = string.len(v)
+		end
+	end
+	return longest
+end
+
+function openScript(scrObj)
+	if scrObj:IsA("LocalScript") then
+		scrObj.Archivable = true
+		scrObj = scrObj:Clone()
+		scrObj.Disabled = true
+	end
+	
+	local scrName = scrObj.Name
+	local scrSource = decompile(scrObj)
+	
+	table.insert(memoryScripts,{Name = scrName,Source = scrSource})
+	
+	local newTab = entryTemplate:Clone()
+	newTab.Button.Text = scrName
+	newTab.Position = UDim2.new(0,#scriptBar:GetChildren() * 100,0,0)
+	newTab.Visible = true
+	
+	newTab.Button.MouseButton1Down:connect(function()
+		for i,v in pairs(scriptBar:GetChildren()) do
+			if v == newTab then
+				editingIndex = i
+				buildScript(memoryScripts[i].Source,0,0,true)
+				scrollBar:ScrollTo(1)
+				scrollBar:Update()
+				scrollBarH:ScrollTo(1)
+				scrollBarH:Update()
+			end
+		end
+	end)
+	
+	newTab.Close.MouseButton1Click:connect(function()
+		for i,v in pairs(scriptBar:GetChildren()) do
+			if v == newTab then
+				table.remove(memoryScripts,i)
+				if editingIndex == i then
+					editingIndex = #memoryScripts
+					if editingIndex > 0 then
+						buildScript(memoryScripts[#memoryScripts].Source,0,0,true)
+					else
+						buildScript("",0,0,true)
+					end
+				end
+				
+				scrollBar:ScrollTo(1)
+				scrollBar:Update()
+				scrollBarH:ScrollTo(1)
+				scrollBarH:Update()
+				
+				for i2 = i,#scriptBar:GetChildren() do
+					scriptBar:GetChildren()[i2].Position = scriptBar:GetChildren()[i2].Position + UDim2.new(0,-100,0,0)
+				end
+				if editingIndex > i then
+					editingIndex = editingIndex - 1
+				end
+				newTab:Destroy()
+			end
+		end
+	end)
+	
+	editingIndex = #memoryScripts
+	buildScript(scrSource,0,0,true)
+	
+	newTab.Parent = scriptBar
+end
+
+function updateScriptBar()
+	local entryCount = 0
+	
+	scriptBarLeft.Active = false
+	scriptBarLeft.AutoButtonColor = false
+	for i,v in pairs(scriptBarLeft["Arrow Graphic"]:GetChildren()) do
+		v.BackgroundTransparency = 0.7
+	end
+	scriptBarRight.Active = false
+	scriptBarRight.AutoButtonColor = false
+	for i,v in pairs(scriptBarRight["Arrow Graphic"]:GetChildren()) do
+		v.BackgroundTransparency = 0.7
+	end
+	for i,v in pairs(scriptBar:GetChildren()) do
+		if v.Position.X.Offset < 0 then
+			scriptBarLeft.Active = true
+			scriptBarLeft.AutoButtonColor = true
+			for i,v in pairs(scriptBarLeft["Arrow Graphic"]:GetChildren()) do
+				v.BackgroundTransparency = 0
+			end
+		elseif v.Position.X.Offset >= 0 then
+			entryCount = entryCount + 1
+			if entryCount == 5 then
+				scriptBarRight.Active = true
+				scriptBarRight.AutoButtonColor = true
+				for i,v in pairs(scriptBarRight["Arrow Graphic"]:GetChildren()) do
+					v.BackgroundTransparency = 0
+				end
+			end
+		end
+	end
+end
+
+scriptBar.ChildAdded:connect(updateScriptBar)
+scriptBar.ChildRemoved:connect(updateScriptBar)
+
+scriptBarLeft.MouseButton1Click:connect(function()
+	if scriptBarLeft.Active == false then return end
+	for i,v in pairs(scriptBar:GetChildren()) do
+		v.Position = v.Position + UDim2.new(0,100,0,0)
+	end
+	updateScriptBar()
+end)
+
+scriptBarRight.MouseButton1Click:connect(function()
+	if scriptBarRight.Active == false then return end
+	for i,v in pairs(scriptBar:GetChildren()) do
+		v.Position = v.Position + UDim2.new(0,-100,0,0)
+	end
+	updateScriptBar()
+end)
+
+mouse.Button1Down:connect(function()
+	if checkMouseInGui(editorGrid) then
+		--print("LETS EDIT!")
+	end
+end)
+
+openEvent.Event:connect(function(...)
+	top.Visible = true
+	local args = {...}
+	if #args > 0 then
+		openScript(args[1])
+	end
+end)
+
+clipboardButton.MouseButton1Click:connect(function()
+	if Clipboard and Clipboard.set then
+		Clipboard.set(currentSource)
+	elseif CopyString then
+		CopyString(currentSource)
+	end
+end)
+
+closeButton.MouseButton1Click:connect(function()
+	top.Visible = false
+end)
+
+--[[
+local scr = script.Parent:WaitForChild("Scr")
+local scr2 = script.Parent:WaitForChild("Scr2")
+local scr3 = script.Parent:WaitForChild("Scr3")
+local scr4 = script.Parent:WaitForChild("TOS")
+local scr5 = script.Parent:WaitForChild("HW")
+--]]
+
+buildScript("",0,0,true)
+--[[
+openScript(scr)
+openScript(scr2)
+openScript(scr3)
+openScript(scr4)
+openScript(scr5)
+--]]
+
+scrollBar:Update()
+scrollBarH:Update()
+end)
+
+--moony

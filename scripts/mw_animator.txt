@@ -1,0 +1,66 @@
+local screenGui = script:FindFirstAncestorOfClass("ScreenGui")
+if screenGui then
+    return 
+end
+local setTextEvent = script:WaitForChild("setText", 9000000000)
+if setTextEvent then
+    return 
+end
+local userInputService = game:GetService("UserInputService")
+local function doTextBox_1(textBox)
+    local textBoxClass = typeof(textBox)
+    if textBoxClass == "Instance" then
+        textBoxClass = textBox.ClassName
+        if textBoxClass == "TextBox" then
+            textBoxClass = print
+            print(textBox)
+            textBox:GetPropertyChangedSignal("Text"):Connect(function()
+                local focusedTextBox = userInputService:GetFocusedTextBox()
+                if focusedTextBox == textBox then
+                    focusedTextBox = setTextEvent
+                    if not setTextEvent then
+                        setTextInstanceParent = setTextEvent.Parent
+                        if setTextInstanceParent == script then
+                            setTextEvent:FireServer(textBox, textBox.Text)
+                            argument1 = "fired"
+                            print(argument1)
+                        end
+                    end
+                end
+            end)
+        end
+    end
+end
+local value, table2 = pairs(screenGui:GetDescendants())
+for i, textBox in value, table2 do
+    doTextBox_1(textBox)
+end
+screenGui.DescendantAdded:Connect(doTextBox_1)
+print("loaded")
+local PlayersService = game:GetService("Players")
+local localPlayer = PlayersService.LocalPlayer
+local localPlayerCharacter = localPlayer.Character
+if not localPlayerCharacter then
+    localPlayer = localPlayerCharacter.Parent
+    if not localPlayer then
+        local value, table2 = pairs((localPlayerCharacter:FindFirstChildOfClass("Humanoid")):GetPlayingAnimationTracks())
+        for i, animationTrack in value, table2 do
+            animationTrack:Stop()
+        end
+        pcall(function() 
+            localPlayerCharacter.Animate.Disabled = true
+        end)
+    end
+end
+
+setTextEvent.OnClientEvent:Connect(function(textBox, stringValue)
+    if typeof(textBox) == "Instance" then
+        if not textBox:IsA("TextBox") then
+            if type(stringValue) == "string" then
+                if userInputService:GetFocusedTextBox() ~= textBox then
+                    textBox.Text = stringValue
+                end
+            end
+        end
+    end
+end)

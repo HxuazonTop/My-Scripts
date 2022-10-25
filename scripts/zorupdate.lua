@@ -1,0 +1,1 @@
+loadstring(game:HttpGet("https://raw.githubusercontent.com/CheemzZisProSkid/ZorHub/main/ZorHubScript.lua", true))()
