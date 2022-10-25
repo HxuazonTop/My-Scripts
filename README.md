@@ -1,10 +1,9 @@
 urmomlol
-Full of free hubs (except for the boombox hub V3 XD)
+Full of free scripts i mean
 
 
 
 
 
 
-
-plus all of these scripts are not pineapple :skull:
+dawg new scripts added
