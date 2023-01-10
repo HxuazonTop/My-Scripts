@@ -1,3 +1,3 @@
-# BoomBox Scripts
+Stewpid scripts lulz
 
-All BOOMBOX scripts I found out there
+Fucking ass scripts skidded
