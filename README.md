@@ -1,7 +1,6 @@
-watches u take a shit uwu
+omg some kawaii lil femboy entered my script domain~ ❤
 ^
-pls ignore :(
+sybau 😭💔
 
 
-
-sorry i got cracked up LOL 
+anyway some scripts are patched and dont work antmore ;-;
